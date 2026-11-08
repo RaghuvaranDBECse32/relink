@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --canvas: #f4f5f7; --surface: #ffffff; --line: #e2e4e9;
+  --ink: #0f1115; --mute: #616774; --brand: #0668e1; --brand-soft: #e6f0fd;
+  --ok: #1a8f4c; --warn: #b7791f; --bad: #d2362f;
+}
+:root.dark {
+  --canvas: #0f1115; --surface: #181b20; --line: #2a2e39;
+  --ink: #eef0f4; --mute: #8b92a1; --brand: #0084ff; --brand-soft: #0e2540;
+  --ok: #3fcf80; --warn: #e6a93c; --bad: #ff6b63;
+}
+html, body, #root { height: 100%; }
+body {
+  @apply bg-canvas text-ink font-sans antialiased;
+  background-image: radial-gradient(var(--line) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+@layer components {
+.btn { @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors disabled:opacity-50; }
+.btn-primary { @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors disabled:opacity-50 bg-brand text-white hover:opacity-90; }
+.btn-ghost { @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors disabled:opacity-50 border border-line text-ink hover:bg-brandsoft; }
+.card { @apply rounded-2xl border border-line bg-surface; }
+.input { @apply w-full rounded-xl border border-line bg-canvas px-3 py-2 text-sm placeholder:text-mute; }
+}
+@keyframes caret { 50% { opacity: 0; } }
+.caret::after { content: "▍"; color: var(--brand); animation: caret 1s steps(1) infinite; }
+@media (prefers-reduced-motion: reduce) { .caret::after { animation: none; } }

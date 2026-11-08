@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:16
+    environment: { POSTGRES_USER: safestudy, POSTGRES_PASSWORD: safestudy, POSTGRES_DB: safestudy }
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck: { test: ["CMD-SHELL", "pg_isready -U safestudy"], interval: 5s, retries: 10 }
+  app:
+    build: .
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://safestudy:safestudy@db:5432/safestudy
+      AUTO_CREATE_TABLES: "false"
+    depends_on: { db: { condition: service_healthy } }
+    ports: ["8000:8000"]
+volumes: { pgdata: {} }

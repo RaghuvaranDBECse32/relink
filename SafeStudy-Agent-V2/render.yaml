@@ -1,0 +1,19 @@
+databases:
+  - name: safestudy-db
+    plan: free
+services:
+  - type: web
+    name: safestudy-v2
+    runtime: docker
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase: { name: safestudy-db, property: connectionString }
+      - key: JWT_SECRET
+        generateValue: true
+      - key: AUTO_CREATE_TABLES
+        value: "false"
+      - key: CORS_ORIGINS
+        value: "https://safestudy-v2.onrender.com"
+      - key: GEMINI_API_KEY
+        sync: false
