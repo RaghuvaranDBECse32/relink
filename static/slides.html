@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>LunaRelay — NASA Space Apps 2026</title>
+<title>ReLink — Multi-Competition Pitch</title>
 <style>
   :root {
     --ink: #0b0e14; --paper: #efe9dc; --amber: #ffb23e;
@@ -194,12 +194,12 @@
 
   <!-- SLIDE 1: Title -->
   <div class="slide active" id="s0">
-    <div class="team-badge">🌕 Team LunaRelay · NASA Space Apps Challenge 2026</div>
-    <div class="big-title"><span class="accent">Luna</span>Relay</div>
-    <div class="sub">Lunar Landing Site Navigator & Link Planner</div>
-    <p class="lede">Know where your lander can see the Sun and talk to Earth —<br>before you leave the ground.</p>
+    <div class="team-badge">ReLink · Multi-competition innovation project</div>
+    <div class="big-title"><span class="accent">Re</span>Link</div>
+    <div class="sub">One Platform · Five Trust Modules · Multiple Challenges</div>
+    <p class="lede">Independent messaging, explainable safety education, evidence verification, lunar planning and an interactive game.</p>
     <div style="margin-top:28px; display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
-      <span class="badge badge-amber">NASA Space Apps 2026</span>
+      <span class="badge badge-amber">Multi-competition project</span>
       <span class="badge badge-green">Lunar Landing Site Navigator</span>
       <span class="badge badge-blue">Open Source · Python + JS</span>
     </div>
@@ -207,86 +207,23 @@
 
   <!-- SLIDE 2: Problem -->
   <div class="slide" id="s1">
-    <div class="eyebrow">The Problem</div>
-    <h2>Choosing the right lunar south-pole site<br>is <span class="red">hard without the right tools</span></h2>
-    <div class="problem-row">
-      <div class="prob-card">
-        <div class="prob-icon">☀️</div>
-        <h3>Solar Power</h3>
-        <p>How many hours will solar panels work at this site? Crater floors are permanently dark.</p>
-      </div>
-      <div class="prob-card">
-        <div class="prob-icon">📡</div>
-        <h3>Communication</h3>
-        <p>When can the lander see Earth directly? Link windows determine when data can be sent.</p>
-      </div>
-      <div class="prob-card">
-        <div class="prob-icon">🗺️</div>
-        <h3>No Easy Comparison</h3>
-        <p>JPL SPICE & Horizons require expert setup. Students & early planners have no accessible tool.</p>
-      </div>
-      <div class="prob-card">
-        <div class="prob-icon">⏱️</div>
-        <h3>Time Critical</h3>
-        <p>Mission planning windows are narrow. Decisions need fast quantitative answers.</p>
-      </div>
-    </div>
+    <div class="eyebrow">Why ReLink</div><h2>Five connected trust problems, <span class="accent">one product</span></h2><div class="problem-row"><div class="prob-card"><h3>Messaging safety</h3><p>Scams and impersonation in everyday chats.</p></div><div class="prob-card"><h3>AI answer freshness</h3><p>Confident but outdated answers need evidence.</p></div><div class="prob-card"><h3>Science planning</h3><p>Lunar visibility comparisons need accessible tools.</p></div><div class="prob-card"><h3>Learning by doing</h3><p>Interactive security lessons and game mechanics.</p></div></div>
   </div>
 
   <!-- SLIDE 3: Solution -->
   <div class="slide" id="s2">
-    <div class="eyebrow">Our Solution</div>
-    <h2>LunaRelay: <span class="accent">One tool</span>, four key answers</h2>
-    <p class="lede">Analytic ephemeris (Meeus algorithms) + simple web UI = instant site comparison with zero API keys required.</p>
-    <div class="pipeline">
-      <div class="pbox">📍 Candidate Sites<br><small style="color:#9aa3ab">lat/lon input</small></div>
-      <div class="arrow">→</div>
-      <div class="pbox">🔭 Meeus Ephemeris<br><small style="color:#9aa3ab">Python + numpy</small></div>
-      <div class="arrow">→</div>
-      <div class="pbox">📊 Visibility Windows<br><small style="color:#9aa3ab">Sun & Earth elevation</small></div>
-      <div class="arrow">→</div>
-      <div class="pbox">📋 Side-by-Side Report<br><small style="color:#9aa3ab">export .md</small></div>
-    </div>
-    <div class="badges" style="margin-top:16px;">
-      <span class="badge badge-green">☀️ Sun-up hours & %</span>
-      <span class="badge badge-blue">📡 Earth-link windows</span>
-      <span class="badge badge-amber">⚡ Both-window overlap</span>
-      <span class="badge badge-green">📈 Relative insolation proxy</span>
-    </div>
+    <div class="eyebrow">Integrated Solution</div><h2>One codebase · <span class="accent">Five modules</span></h2><div class="pipeline"><div class="pbox">Chat</div><div class="pbox">Security Teacher</div><div class="pbox">Verify</div><div class="pbox">Link Planner</div><div class="pbox">Lunar Relay</div></div><p class="lede">Vanilla JavaScript frontend → Python HTTP backend → SQLite, rules, optional AI evidence services, and lunar geometry.</p>
   </div>
 
   <!-- SLIDE 4: NASA Data -->
   <div class="slide" id="s3">
-    <div class="eyebrow">NASA Data & Methods</div>
-    <h2>Built on <span class="accent">real science</span>, honest about limits</h2>
-    <div class="cards">
-      <div class="card">
-        <span class="card-icon">🌑</span>
-        <h3>Lunar South Pole Sites</h3>
-        <p style="font-size:13px;color:var(--mute)">Candidate sites sourced from NASA SSERVI and LRO imagery — Shackleton rim, Nobile, Haworth, de Gerlache, Malapert.</p>
-      </div>
-      <div class="card">
-        <span class="card-icon">📐</span>
-        <h3>Meeus Algorithms</h3>
-        <p style="font-size:13px;color:var(--mute)">Jean Meeus "Astronomical Algorithms" — same math basis as NASA's planning tools, accessible without SPICE setup.</p>
-      </div>
-      <div class="card">
-        <span class="card-icon">🛸</span>
-        <h3>NASA Science Mission</h3>
-        <p style="font-size:13px;color:var(--mute)">References NASA's Lunar South Pole exploration priorities and Science Mission Directorate objectives.</p>
-      </div>
-      <div class="card">
-        <span class="card-icon">⚠️</span>
-        <h3>Honest Limitations</h3>
-        <p style="font-size:13px;color:var(--mute)">Flat-horizon model. Not terrain-aware. Earth visibility = geometry, not radio link budget. For concept studies.</p>
-      </div>
-    </div>
+    <div class="eyebrow">Competition Alignment</div><h2>Same product · <span class="accent">different lead modules</span></h2><div class="cards"><div class="card"><h3>Hack2Skill</h3><p>Chat + Security Teacher; AI code evaluation snapshot 86/100.</p></div><div class="card"><h3>Global AI Hackathon</h3><p>Verify: Tavily evidence and optional Bifrost/Gemini judging.</p></div><div class="card"><h3>NASA Space Apps</h3><p>Link Planner: analytic Sun/Earth visibility, not terrain-aware.</p></div><div class="card"><h3>Future Health + Jabali</h3><p>Health-message trust concept; integrated Lunar Relay game.</p></div></div><p style="margin-top:14px">README documents competition fit, not proof of every formal submission or award.</p>
   </div>
 
   <!-- SLIDE 5: All Modules -->
   <div class="slide" id="s4">
     <div class="eyebrow">Platform Overview</div>
-    <h2>One platform · <span class="accent">Five trust modules</span></h2>
+    <h2>One platform · <span class="accent">Five integrated modules</span></h2>
     <div class="module-row">
       <div class="mod">
         <div class="mod-icon">🌕</div>
@@ -319,7 +256,7 @@
   <!-- SLIDE 6: Tech Stack -->
   <div class="slide" id="s5">
     <div class="eyebrow">How We Built It</div>
-    <h2>Zero dependencies, <span class="accent">fully open source</span></h2>
+    <h2>Lightweight architecture · <span class="accent">open-source MVP</span></h2>
     <div class="cards" style="max-width:860px;">
       <div class="card">
         <span class="card-icon">🐍</span>
@@ -352,19 +289,19 @@
   <!-- SLIDE 7: Closing / CTA -->
   <div class="slide" id="s6">
     <div class="eyebrow">NASA Space Apps Challenge 2026</div>
-    <div class="big-title" style="font-size:clamp(40px,6vw,72px)"><span class="accent">Luna</span>Relay</div>
-    <p class="lede" style="margin-top:16px;">Helping mission planners pick the right spot on the Moon —<br>one visibility window at a time. 🌕</p>
+    <div class="big-title" style="font-size:clamp(40px,6vw,72px)"><span class="accent">Re</span>Link</div>
+    <p class="lede" style="margin-top:16px;">One codebase, multiple competition-specific demonstrations — built around reliable links and verified signals.</p>
     <div class="url-box">🔗 relink-production-f9430c75.up.railway.app</div>
     <div style="margin-bottom:16px;">
       <span class="badge badge-amber">Open Source</span>
       <span class="badge badge-green">Python + JS</span>
-      <span class="badge badge-blue">NASA Space Apps 2026</span>
+      <span class="badge badge-blue">Multi-competition project</span>
       <span class="badge badge-green">Live Demo</span>
     </div>
     <div class="team-members">
-      <span class="member">🌕 Team LunaRelay</span>
-      <span class="member">📍 NASA Space Apps 2026</span>
-      <span class="member">🚀 Lunar Landing Site Navigator</span>
+      <span class="member">ReLink project</span>
+      <span class="member">📍 Multi-competition project</span>
+      <span class="member">Five integrated modules</span>
     </div>
   </div>
 
