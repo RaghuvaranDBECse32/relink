@@ -17,7 +17,14 @@ _hits: dict[str, deque] = defaultdict(deque); _lock = threading.Lock()
 
 def rate_ok(key: str, limit: int, per: int = 60) -> bool:
     with _lock:
-        q = _hits[key]; t = time.time()
+        t = time.time()
+        if len(_hits) > 5000:
+            for old_key, old_q in list(_hits.items()):
+                while old_q and old_q[0] < t - per:
+                    old_q.popleft()
+                if not old_q:
+                    del _hits[old_key]
+        q = _hits[key]
         while q and q[0] < t - per: q.popleft()
         if len(q) >= limit: return False
         q.append(t); return True
@@ -35,7 +42,14 @@ def status_payload():
 
 # ---- handlers: (ctx) -> json. ctx has c (db), u (user|None), q (query), b (body), p (path params) ----
 def h_register(x): return store.register(x.c, x.b.get("username"), x.b.get("password"), x.b.get("display_name"))
-def h_login(x): return store.login(x.c, x.b.get("username"), x.b.get("password"))
+def h_login(x):
+    username = x.b.get("username")
+    if not isinstance(username, str):
+        raise ApiError(400, "Invalid username.")
+    # Per-account throttling supplements the per-IP authentication limit.
+    if not rate_ok("login:" + username.strip().casefold(), 8):
+        raise ApiError(429, "Too many login attempts. Try again later.")
+    return store.login(x.c, username, x.b.get("password"))
 def h_logout(x): store.logout(x.c, x.u); return {"ok": True}
 def h_me(x): return {**store.public_user(x.u), "read_receipts": bool(x.u["read_receipts"])}
 def h_patch_me(x): store.update_me(x.c, x.u, x.b.get("display_name"), x.b.get("read_receipts")); return {"ok": True}
@@ -49,7 +63,13 @@ def h_report(x): return store.report(x.c, x.u, x.b.get("username"), x.b.get("mes
 def h_direct(x): return store.open_direct(x.c, x.u, x.b.get("username"))
 def h_group(x): return store.create_group(x.c, x.u, x.b.get("title"), x.b.get("members"))
 def h_convs(x): return {"conversations": store.list_conversations(x.c, x.u)}
-def h_msgs(x): return {"messages": store.get_messages(x.c, x.u, int(x.p[0]), int(x.q.get("after", 0) or 0))}
+def h_msgs(x):
+    try:
+        after = int(x.q.get("after", 0) or 0)
+        if after < 0: raise ValueError()
+    except (ValueError, TypeError):
+        raise ApiError(400, "Invalid after parameter.")
+    return {"messages": store.get_messages(x.c, x.u, int(x.p[0]), after)}
 def h_send(x): return store.send_message(x.c, x.u, int(x.p[0]), x.b.get("body"))
 def h_read(x): return store.mark_read(x.c, x.u, int(x.p[0]))
 def h_export(x): return store.export_account(x.c, x.u)
@@ -89,7 +109,7 @@ def h_luna(x):
     return {"timezone": "UTC", "start": start.isoformat(), "results": res, "limitations": lunar.LIMITATIONS,
             "model": "Meeus analytic series + optical libration; flat horizon with mask angle"}
 
-# (method, regex, handler, auth, rate-limit-per-minute for this route group or None)
+# (method, regex, handler, auth, four fields: method, regex, handler, authentication required)
 ROUTES = [
  ("GET", r"/api/status", h_status, False), ("POST", r"/api/auth/register", h_register, False), ("POST", r"/api/auth/login", h_login, False),
  ("POST", r"/api/auth/logout", h_logout, True), ("GET", r"/api/me", h_me, True), ("PATCH", r"/api/me", h_patch_me, True),
@@ -110,6 +130,7 @@ class Ctx:  # request context
 
 class Handler(BaseHTTPRequestHandler):
     server_version = "ReLink/" + __version__; protocol_version = "HTTP/1.1"
+    timeout = 15
     def log_message(self, fmt, *a):
         if os.environ.get("RELINK_LOG"): super().log_message(fmt, *a)
 
@@ -122,7 +143,24 @@ class Handler(BaseHTTPRequestHandler):
         for k, v in (extra or {}).items(): self.send_header(k, v)
         self.end_headers(); self.wfile.write(body)
 
-    def _ip(self): return self.headers.get("X-Forwarded-For", self.client_address[0]).split(",")[0].strip()
+    def _ip(self):
+        """Client IP. X-Forwarded-For is trusted only when the direct peer is a non-public
+        address (private/loopback/CGNAT, e.g. Railway's proxy) or listed in TRUSTED_PROXY_CIDRS."""
+        from ipaddress import ip_address, ip_network
+        peer = self.client_address[0]
+        try:
+            p = ip_address(peer)
+            trusted = (not p.is_global) or any(p in ip_network(n.strip(), strict=False)
+                       for n in os.environ.get("TRUSTED_PROXY_CIDRS", "").split(",") if n.strip())
+        except ValueError:
+            trusted = False
+        if trusted:
+            try:
+                fwd = self.headers.get("X-Forwarded-For", "").split(",")[-1].strip()
+                if fwd: return str(ip_address(fwd))
+            except ValueError:
+                pass
+        return peer
 
     def _static(self, path):
         rel = "index.html" if path in ("/", "") else path.lstrip("/")
@@ -146,7 +184,11 @@ class Handler(BaseHTTPRequestHandler):
                     x = Ctx(); x.c, x.ip, x.p, x.q = c, ip, mt.groups(), {k: v[0] for k, v in parse_qs(url.query).items()}
                     x.b = {}; x.u = None
                     if method in ("POST", "PATCH"):
-                        n = int(self.headers.get("Content-Length") or 0)
+                        try:
+                            n = int(self.headers.get("Content-Length") or 0)
+                        except (ValueError, TypeError):
+                            raise ApiError(400, "Invalid Content-Length.")
+                        if n < 0: raise ApiError(400, "Invalid Content-Length.")
                         if n > MAX_BODY: raise ApiError(413, "Request too large.")
                         if n:
                             try: x.b = json.loads(self.rfile.read(n).decode())

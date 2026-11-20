@@ -27,7 +27,10 @@ CREATE TABLE IF NOT EXISTS members(conv_id INTEGER NOT NULL, user_id INTEGER NOT
 CREATE TABLE IF NOT EXISTS messages(id INTEGER PRIMARY KEY AUTOINCREMENT, conv_id INTEGER NOT NULL, sender_id INTEGER NOT NULL,
   body TEXT NOT NULL, created_at TEXT NOT NULL);
 CREATE INDEX IF NOT EXISTS idx_msg_conv ON messages(conv_id,id);
+CREATE INDEX IF NOT EXISTS idx_members_user ON members(user_id);
+CREATE INDEX IF NOT EXISTS idx_cr_to ON contact_requests(to_id,status);
 CREATE TABLE IF NOT EXISTS verifications(id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL, created_at TEXT NOT NULL, result TEXT NOT NULL);
+CREATE INDEX IF NOT EXISTS idx_ver_user ON verifications(user_id,id);
 """
 
 def now() -> str: return datetime.now(timezone.utc).isoformat(timespec="seconds")
@@ -88,7 +91,8 @@ def public_user(u) -> dict: return {"id": u["id"], "username": u["username"], "d
 def register(c, username: str, password: str, display_name: str | None):
     username = (username or "").strip().lower()
     if not USERNAME_RE.match(username): raise ApiError(400, "Username must be 3-24 characters: a-z, 0-9, underscore.")
-    if len(password or "") < 10: raise ApiError(400, "Password must be at least 10 characters.")
+    if not isinstance(password, str) or not 10 <= len(password) <= 128:
+        raise ApiError(400, "Password must be between 10 and 128 characters.")
     if password.lower() == username or password.lower() in {"password123", "1234567890"}: raise ApiError(400, "Choose a less guessable password.")
     dn = (display_name or username).strip()[:40] or username
     try:

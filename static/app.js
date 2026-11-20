@@ -10,7 +10,7 @@ function h(tag, attrs = {}, ...kids) {
   for (const k of kids.flat()) if (k != null && k !== false) e.append(k.nodeType ? k : document.createTextNode(String(k)));
   return e;
 }
-let token = sessionStorage.getItem("relink_token"), me = null, STATUS = null, timer = null, active = null;
+let token = sessionStorage.getItem("relink_token"), me = null, STATUS = null, timer = null, active = null, cleanupView = null;
 async function api(path, method = "GET", body) {
   const r = await fetch("/api" + path, { method, headers: { "Content-Type": "application/json", ...(token ? { Authorization: "Bearer " + token } : {}) }, body: body ? JSON.stringify(body) : undefined });
   let d = {}; try { d = await r.json(); } catch {}
@@ -18,7 +18,7 @@ async function api(path, method = "GET", body) {
   return d;
 }
 function setToken(t) { token = t; t ? sessionStorage.setItem("relink_token", t) : sessionStorage.removeItem("relink_token"); if (!t) me = null; }
-const busy = async (btn, fn, out) => { btn.disabled = true; try { await fn(); } catch (e) { out && out.replaceChildren(h("div", { class: "note" }, "⚠ " + e.message)); } finally { btn.disabled = false; } };
+const busy = async (btn, fn, out) => { btn.disabled = true; try { await fn(); } catch (e) { out && out.replaceChildren(h("div", { class: "note", role: "alert" }, "⚠ " + e.message)); } finally { btn.disabled = false; } };
 const when = iso => new Date(iso).toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
 const put = (el, ...k) => el.replaceChildren(...k.flat().filter(x => x != null && x !== false));
 const badge = (t, c = "") => h("span", { class: "badge " + c }, t);
@@ -26,10 +26,26 @@ const badge = (t, c = "") => h("span", { class: "badge " + c }, t);
 // ---------- shell ----------
 const main = $("#main");
 document.querySelectorAll(".rail [data-tab]").forEach(b => b.addEventListener("click", () => show(b.dataset.tab)));
+let labelSeq = 0;
+function linkLabels(root = main) {
+  root.querySelectorAll("label:not([for])").forEach(label => {
+    const control = label.querySelector("input,textarea,select") || label.nextElementSibling;
+    if (control && /^(INPUT|TEXTAREA|SELECT)$/.test(control.tagName)) {
+      if (!control.id) control.id = "relink-field-" + (++labelSeq);
+      label.htmlFor = control.id;
+    }
+  });
+}
 async function show(tab) {
+  cleanupView?.(); cleanupView = null;
   clearInterval(timer); active = null;
-  document.querySelectorAll(".rail [data-tab]").forEach(b => b.classList.toggle("on", b.dataset.tab === tab));
-  main.replaceChildren(); await views[tab](); main.focus();
+  document.querySelectorAll(".rail [data-tab]").forEach(b => {
+    const selected = b.dataset.tab === tab;
+    b.classList.toggle("on", selected);
+    if (selected) b.setAttribute("aria-current", "page");
+    else b.removeAttribute("aria-current");
+  });
+  main.replaceChildren(); await views[tab](); linkLabels(); main.focus();
 }
 async function loadStatus() {
   try { STATUS = await api("/status"); } catch { STATUS = null; }
@@ -95,7 +111,7 @@ views.chat = async () => {
   };
     const openConv = async c => {
     active = c.id; const log = h("div", { class: "msgs", "aria-live": "polite" });
-    const input = h("textarea", { placeholder: "Message…", style: "min-height:60px" }), out = h("div", {});
+    const input = h("textarea", { placeholder: "Message…", "aria-label": "Chat message", style: "min-height:60px" }), out = h("div", {});
     const send = h("button", { class: "btn" }, "Send");
     send.onclick = () => busy(send, async () => { await api(`/conversations/${c.id}/messages`, "POST", { body: input.value }); input.value = ""; await pull(); }, out);
     right.replaceChildren(h("h2", {}, c.title), log, input, send, out,
@@ -117,7 +133,7 @@ views.chat = async () => {
   let pullActive = null;
   await renderList();
   clearInterval(timer);
-  timer = setInterval(async () => { try { if (pullActive) await pullActive(); if (!left.contains(document.activeElement)) await renderList(); } catch {} }, 3000);
+  timer = setInterval(async () => { try { if (document.hidden) return; if (pullActive) await pullActive(); if (!left.contains(document.activeElement)) await renderList(); } catch {} }, 3000);
 };
 function newGroup(contacts, done) { return async () => {
   const title = prompt("Group name?"); if (!title) return;
@@ -138,7 +154,7 @@ function teachMsg(text) { show("teacher").then(() => { const t = $("#tx"); if (t
 views.teacher = async () => {
   main.append(h("div", { class: "eyebrow" }, "Opt-in analysis · explainable rules"), h("h1", {}, "Security Teacher"),
     h("p", { class: "lede" }, "Only text you paste here is analysed, and it is not stored. Results are screening guidance, never a verdict."));
-  const t = h("textarea", { id: "tx", placeholder: "Paste a suspicious message or link…" }), out = h("div", {});
+  const t = h("textarea", { id: "tx", "aria-label": "Suspicious message or link", placeholder: "Paste a suspicious message or link…" }), out = h("div", {});
   const go = h("button", { class: "btn", id: "tgo" }, "Analyse");
   go.onclick = () => busy(go, async () => {
     const r = await api("/teacher/analyze", "POST", { text: t.value });
@@ -162,7 +178,7 @@ views.teacher = async () => {
 views.verify = async () => {
   main.append(h("div", { class: "eyebrow" }, "Stale-answer detector · Tavily + Bifrost/Gemini"), h("h1", {}, "Verify"),
     h("p", { class: "lede" }, "Paste a claim or an AI-generated answer. ReLink retrieves live evidence, has a model judge each source against the claim, and applies fixed rules for freshness. A recent web page alone never makes a claim CURRENT."));
-  const t = h("textarea", { placeholder: "e.g. “Jane Roe is the CEO of Acme.”" }), prof = h("select", {}, h("option", { value: "general" }, "General web"), h("option", { value: "health" }, "Health (official sources only: WHO, NIH, CDC, NHS, DoH Abu Dhabi, MOHAP…)")), out = h("div", {});
+  const t = h("textarea", { "aria-label": "e.g. “Jane Roe is the CEO of Acme.”", placeholder: "e.g. “Jane Roe is the CEO of Acme.”" }), prof = h("select", {}, h("option", { value: "general" }, "General web"), h("option", { value: "health" }, "Health (official sources only: WHO, NIH, CDC, NHS, DoH Abu Dhabi, MOHAP…)")), out = h("div", {});
   const run = (path, body, method = "POST") => async e => busy(e.target, async () => renderVerify(out, await api(path, method, body && body()) ), out);
   main.append(h("div", { class: "card" }, h("label", {}, "Claim or answer"), t, h("label", {}, "Profile"), prof,
     h("button", { class: "btn", onclick: run("/verify", () => ({ text: t.value, profile: prof.value })) }, "Verify"),
@@ -190,7 +206,7 @@ views.luna = async () => {
     h("p", { class: "lede" }, "Compare Sun and Earth visibility from candidate lunar south-pole sites. All times UTC."),
     h("div", { class: "note" }, h("b", {}, "Read before using: "), limitations.join(" ")));
   const boxes = sites.map((s, i) => h("label", { style: "display:flex;gap:8px;align-items:center;margin:4px 0" }, h("input", { type: "checkbox", style: "width:auto", checked: i < 3, value: i }), s.name + `  (${s.latitude}°, ${s.longitude}°)`));
-  const custom = [h("input", { placeholder: "Custom name" }), h("input", { type: "number", step: "0.01", placeholder: "Latitude (-90…90)" }), h("input", { type: "number", step: "0.01", placeholder: "Longitude (-180…180)" })];
+  const custom = [h("input", { "aria-label": "Custom site name", placeholder: "Custom name" }), h("input", { type: "number", step: "0.01", "aria-label": "Custom latitude", placeholder: "Latitude (-90…90)" }), h("input", { type: "number", step: "0.01", "aria-label": "Custom longitude", placeholder: "Longitude (-180…180)" })];
   const today = new Date().toISOString().slice(0, 10);
   const start = h("input", { type: "date", value: today }), hours = h("input", { type: "number", value: 720, min: 1, max: 1440 }), step = h("input", { type: "number", value: 60, min: 1, max: 720 }), mask = h("input", { type: "number", value: 0, min: 0, max: 30, step: "0.5" });
   const out = h("div", {}), go = h("button", { class: "btn" }, "Compute windows");
@@ -284,15 +300,15 @@ views.game = async () => {
   }
 
   // Canvas for Lunar Arena
-  const canvas = h("canvas", { style: "width:100%;height:240px;background:#0b0e14;border-radius:8px;display:block" });
+  const canvas = h("canvas", { role: "img", "aria-label": "Lunar Relay game board. Use the relay grid buttons below to play.", style: "width:100%;height:240px;background:#0b0e14;border-radius:8px;display:block" });
   canvas.width = 600;
   canvas.height = 240;
   const ctx = canvas.getContext("2d");
 
   // HUD
   const hudScore = h("span", { class: "mono", style: "font-weight:700" }, "0");
-  const hudWave = h("span", { class: "badge ok" }, "WAVE 1/5");
-  const hudBase = h("span", { class: "badge warn" }, "BASE: 5/5");
+  const hudWave = h("span", { class: "badge ok", role: "status" }, "WAVE 1/5");
+  const hudBase = h("span", { class: "badge warn", role: "status" }, "BASE: 5/5");
   const pauseBtn = h("button", { class: "btn ghost sm" }, "Pause");
   pauseBtn.onclick = () => { isPaused = !isPaused; pauseBtn.textContent = isPaused ? "Resume" : "Pause"; };
 
@@ -689,8 +705,7 @@ views.game = async () => {
   loop();
 
   // Cleanup on tab switch
-  const origClear = window.clearInterval;
-  timer = setInterval(() => {}, 100000); // placeholder for active tab timer
+  cleanupView = () => { if (animId !== null) cancelAnimationFrame(animId); };
   // Add Restart button
   const restartBtn = h("button", {
     class: "btn sm",

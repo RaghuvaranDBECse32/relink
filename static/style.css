@@ -1,6 +1,6 @@
 :root{--ink:#0e1013;--ink2:#161a1f;--ink3:#1e242b;--line:#2b333c;--paper:#efe9dc;--mute:#9aa3ab;--amber:#ffb23e;--sig:#6fe0b8;--red:#ff7a6b;--blue:#8fb8ff;
 --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;--mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;--sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-@media(prefers-color-scheme:light){:root{--ink:#f6f2e9;--ink2:#fffdf8;--ink3:#ece6d8;--line:#d6cdb9;--paper:#1a1c1f;--mute:#5f666d;--amber:#b86a00;--sig:#0a7a5a;--red:#c0392b;--blue:#2457b8}}
+@media(prefers-color-scheme:light){:root{--ink:#f6f2e9;--ink2:#fffdf8;--ink3:#ece6d8;--line:#d6cdb9;--paper:#1a1c1f;--mute:#5f666d;--amber:#9a5700;--sig:#0a7a5a;--red:#c0392b;--blue:#2457b8}}
 *{box-sizing:border-box}html,body{margin:0;background:var(--ink);color:var(--paper);font:15px/1.55 var(--sans)}
 .app{display:grid;grid-template-columns:230px 1fr;min-height:100vh}
 .rail{border-right:1px solid var(--line);padding:22px 14px;display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh}
@@ -33,3 +33,8 @@ canvas{width:100%;height:260px;display:block;background:var(--ink);border:1px so
 details{margin:8px 0}summary{cursor:pointer;font-weight:600}.quiz button{all:unset;cursor:pointer;display:block;padding:6px 10px;border:1px solid var(--line);border-radius:8px;margin:5px 0}.quiz button.right{border-color:var(--sig)}.quiz button.wrong{border-color:var(--red)}
 @media(max-width:760px){.app{grid-template-columns:1fr}.rail{position:static;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center;padding:10px}.brand{margin:0 10px 0 0}.brand small,.rail-foot{display:none}}
 @media(prefers-reduced-motion:no-preference){.card{animation:in .25s ease-out}@keyframes in{from{opacity:0;transform:translateY(4px)}}}
+
+/* Keyboard access and skip navigation */
+button:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--amber);outline-offset:3px}
+.skip{position:absolute;left:-9999px;top:0}
+.skip:focus{left:8px;top:8px;z-index:1000;background:var(--ink2);color:var(--paper);padding:10px 14px;border:2px solid var(--amber);border-radius:8px}

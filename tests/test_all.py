@@ -112,7 +112,9 @@ class TestApi(unittest.TestCase):
         cls.srv = server.create_server("127.0.0.1", 0); cls.base = f"http://127.0.0.1:{cls.srv.server_port}"
         threading.Thread(target=cls.srv.serve_forever, daemon=True).start()
     @classmethod
-    def tearDownClass(cls): cls.srv.shutdown()
+    def tearDownClass(cls):
+        cls.srv.shutdown()
+        cls.srv.server_close()
     def call(self, method, path, body=None, tok=None):
         req = urllib.request.Request(self.base + path, method=method, data=json.dumps(body).encode() if body is not None else None,
                                      headers={"Content-Type": "application/json", **({"Authorization": "Bearer " + tok} if tok else {})})
@@ -121,6 +123,16 @@ class TestApi(unittest.TestCase):
         except urllib.error.HTTPError as e: return e.code, json.loads(e.read())
     def user(self, name):
         s, r = self.call("POST", "/api/auth/register", {"username": name, "password": "correct-horse-9"}); self.assertEqual(s, 200, r); return r["token"]
+
+    def test_invalid_message_cursor(self):
+        token = self.user("cursor_test")
+        status, payload = self.call("GET", "/api/conversations/1/messages?after=abc", tok=token)
+        self.assertEqual(status, 400)
+
+    def test_password_max_length(self):
+        status, payload = self.call("POST", "/api/auth/register", {
+            "username": "long_password", "password": "a" * 129})
+        self.assertEqual(status, 400)
 
     def test_static_and_status(self):
         self.assertEqual(self.call("GET", "/api/status")[1]["messaging"]["end_to_end_encryption"], False)
