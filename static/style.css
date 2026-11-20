@@ -38,3 +38,5 @@ details{margin:8px 0}summary{cursor:pointer;font-weight:600}.quiz button{all:uns
 button:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--amber);outline-offset:3px}
 .skip{position:absolute;left:-9999px;top:0}
 .skip:focus{left:8px;top:8px;z-index:1000;background:var(--ink2);color:var(--paper);padding:10px 14px;border:2px solid var(--amber);border-radius:8px}
+
+.rail a.navlink{display:block;padding:10px 12px;border-radius:8px;color:var(--mute);font-weight:600;text-decoration:none}.rail a.navlink:hover{background:var(--ink3);color:var(--paper)}
